@@ -1,0 +1,9 @@
+
+# HTTP configuration
+http:
+  port: 8080
+  !include "../http.yg"
+ 
+ # general stuff
+ !include "../general.yg"
+ 

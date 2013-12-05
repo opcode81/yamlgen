@@ -1,0 +1,5 @@
+databaseConfig:
+  server: localhost
+  database: foo
+  user: foo
+  password: password
