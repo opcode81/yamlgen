@@ -1,11 +1,13 @@
 yamlgen
 =======
 
-A generator for YAML files that supports recursive inclusions
+#### A generator for YAML files that supports recursive inclusions
 
 
 yamlgen generates YAML (.yml) files from YAML generator (.yg) files that support
-an include directive of the following form: !include "<.yg or .yml file>"
+an include directive of the following form: 
+
+> `!include "<.yg or .yml file>"`
 
 The path to included files can be relative to the inclusing file.
 
