@@ -29,7 +29,7 @@
 YAML Generator (C) 2013 Dominik Jain 
 
 generates YAML (.yml) files from YAML Generator (.yg) files that support
-the an include directory of the following form: !include "<.yg or .yml file>"
+an include directive of the following form: !include "<.yg or .yml file>"
 
 The path to included files can be relative to the inclusing file.
 
