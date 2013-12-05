@@ -9,7 +9,7 @@ an include directive of the following form:
 
 > `!include "<.yg or .yml file>"`
 
-The path to included files can be relative to the inclusing file.
+The path to included files can be relative to the including file.
 
 Any inclusions in included .yg files will be recursively resolved.
 
