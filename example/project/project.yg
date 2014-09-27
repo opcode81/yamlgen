@@ -1,9 +1,10 @@
 
 # HTTP configuration
+!${port}="8080"
 http:
-  port: 8080
-  !include "../http.yg"
- 
- # general stuff
- !include "../general.yg"
+  !include "includes/http.yg"
+  needClientAuth: true
+
+# general stuff
+!include "includes/general.yg"
  
