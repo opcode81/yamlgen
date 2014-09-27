@@ -51,8 +51,8 @@ class YamlGen(object):
         self.vars = {}
         self.path, self.filename = os.path.split(ygFilePath.replace("/", os.path.sep))   
         if self.filename[-3:] != ".yg": raise Exception("Not a .yg file: %s" % ygFilePath)
-        self.patIncludeLine = re.compile(r'''^(\s*!include\s+".*?"\s*$)''', re.MULTILINE)
-        self.patDefineVar = re.compile(r'''^(\s*!\$\{[^\}]+\}=".*?"\s*$)''', re.MULTILINE)
+        self.patIncludeLine = re.compile(r'''^([ \t]*!include\s+".*?"\s*$)''', re.MULTILINE)
+        self.patDefineVar = re.compile(r'''^([ \t]*!\$\{[^\}]+\}\s*=\s*".*?"\s*$)''', re.MULTILINE)
         self.patSubstVar = re.compile(r'''(!\$\{[^\}]+\})''', re.MULTILINE)
 
     def include(self, match, path):
