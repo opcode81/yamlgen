@@ -48,28 +48,53 @@ import os
 
 class YamlGen(object):
     def __init__(self, ygFilePath):
+        self.vars = {}
         self.path, self.filename = os.path.split(ygFilePath.replace("/", os.path.sep))   
         if self.filename[-3:] != ".yg": raise Exception("Not a .yg file: %s" % ygFilePath)
-        self.patIncludeLine = re.compile(r'''^(\s*!include\s+".*?"\s*$)''', re.MULTILINE)   
+        self.patIncludeLine = re.compile(r'''^(\s*!include\s+".*?"\s*$)''', re.MULTILINE)
+        self.patDefineVar = re.compile(r'''^(\s*!\$\{[^\}]+\}=".*?"\s*$)''', re.MULTILINE)
+        self.patSubstVar = re.compile(r'''(!\$\{[^\}]+\})''', re.MULTILINE)
 
     def include(self, match, path):
-        match = re.search(r'''(\s*)!include\s+"(.*?)"''', match.group(1))
-        indentation = match.group(1)
+        line = match.group(1)
+        match = re.search(r'''(\s*)!include\s+"(.*?)"''', line)
+        indentation = match.group(1).strip("\r\n")
         includedFile = match.group(2).replace("/", os.path.sep)
+        includedFile = os.path.abspath(os.path.join(path, includedFile))
         if not os.path.exists(includedFile):
-            includedFile = os.path.join(path, includedFile)
-            if not os.path.exists(includedFile):
-                raise Exception("Could not find inclusion '%s'" % match.group(1))
+            raise Exception("Could not find inclusion '%s' referenced in include statement: %s" % (includedFile, line.strip()))
         print "  including %s" % includedFile
         text = self._gen(*os.path.split(includedFile))
         lines = text.split("\n")
         return "\n".join(map(lambda l: indentation + l, lines))                
+
+    def defVar(self, match):
+        text = match.group(1)
+        m = re.search(r'''\$\{(.*?)\}="(.*?)"''', text)
+        varname, value = m.groups()
+        self.vars[varname] = value
+        return ""
+
+    def substVar(self, match):
+        varname = re.search(r'''{(.*?)\}''', match.group(1)).group(1)
+        if not varname in self.vars:
+            raise Exception("undefined variable '%s'" % varname)
+        return self.vars[varname]
     
     def _gen(self, path, filename):
-        fullpath = os.path.join(path, filename)
+        fullpath = os.path.abspath(os.path.join(path, filename))
         print fullpath
         text = file(fullpath, "r").read()
-        return self.patIncludeLine.sub(lambda match, path=path: self.include(match, path), text)
+        text = self.patDefineVar.sub(lambda match: self.defVar(match), text)
+        try:
+            text = self.patSubstVar.sub(lambda match: self.substVar(match), text)
+        except Exception as e:
+            raise Exception("error while substituting variables in %s: %s" % (fullpath, str(e)))
+        try: 
+            ret = self.patIncludeLine.sub(lambda match, path=path: self.include(match, path), text)
+        except Exception as e:
+            raise Exception("error while including file in %s: %s" % (fullpath, str(e)))
+        return ret
 
     def gen(self):
         text = self._gen(self.path, self.filename)
@@ -77,12 +102,15 @@ class YamlGen(object):
         print "writing %s" % outfile
         with file(outfile, "w") as f:
             f.write(text)
+        if "\t" in text:
+            pos = text.find("\t")
+            raise Exception("Generated file %s contains tabs at position %d: %s" % (outfile, pos, text[pos:][:100] + "..."))
         
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
-    parser.add_option("-i", dest="file", help="the .yg input file", metavar="<file>", type="string")
+    parser.add_option("-i", dest="file", help="the .yg input file or comma-separated list of files", metavar="<file>", type="string")
     (options, args) = parser.parse_args()
     if options.file is not None:
-        YamlGen(options.file).gen()
-    
+        for filename in options.file.split(","):
+            YamlGen(filename).gen()
